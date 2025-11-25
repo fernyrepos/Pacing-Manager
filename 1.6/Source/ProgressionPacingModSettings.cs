@@ -19,11 +19,13 @@ namespace ProgressionPacing
             { TechLevel.Ultra, 1f },
             { TechLevel.Archotech, 1f }
         };
+        public static int roundingMultiple = 1;
 
         public override void ExposeData()
         {
             base.ExposeData();
             Scribe_Collections.Look(ref techLevelMultipliers, "techLevelMultipliers", LookMode.Value, LookMode.Value);
+            Scribe_Values.Look(ref roundingMultiple, "roundingMultiple", 1);
 
             if (techLevelMultipliers == null)
             {
@@ -45,7 +47,15 @@ namespace ProgressionPacing
             foreach (var def in DefDatabase<ResearchProjectDef>.AllDefs)
             {
                 float multiplier = GetMultiplierForTechLevel(def.techLevel);
-                def.baseCost = Mathf.RoundToInt(def.baseCost * multiplier);
+                float newCost = def.baseCost * multiplier;
+                if (roundingMultiple > 1)
+                {
+                    def.baseCost = Mathf.RoundToInt(newCost / roundingMultiple) * roundingMultiple;
+                }
+                else
+                {
+                    def.baseCost = Mathf.RoundToInt(newCost);
+                }
             }
         }
 

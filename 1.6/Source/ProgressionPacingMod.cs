@@ -27,6 +27,11 @@ namespace ProgressionPacing
                     ProgressionPacingModSettings.techLevelMultipliers[techLevel] = listing.SliderLabeled(label, ProgressionPacingModSettings.techLevelMultipliers[techLevel], 0.01f, 10f, labelPct: 0.15f);
                 }
             }
+
+            listing.Gap();
+            string buffer = ProgressionPacingModSettings.roundingMultiple.ToString();
+            listing.TextFieldNumericLabeled("PP_RoundingMultiple".Translate() + " ", ref ProgressionPacingModSettings.roundingMultiple, ref buffer, 1, 10000);
+
             listing.End();
         }
 

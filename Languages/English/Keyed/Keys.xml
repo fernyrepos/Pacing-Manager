@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LanguageData>
   <PP_ResearchCostMultipliersByTechLevel>Research cost multipliers by tech level</PP_ResearchCostMultipliersByTechLevel>
+  <PP_RoundingMultiple>Round to multiple of</PP_RoundingMultiple>
 </LanguageData>
