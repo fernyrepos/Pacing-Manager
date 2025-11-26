@@ -30,6 +30,7 @@ namespace ProgressionPacing
 
             listing.Gap();
             string buffer = ProgressionPacingModSettings.roundingMultiple.ToString();
+            listing.curX -= 200;
             listing.TextFieldNumericLabeled("PP_RoundingMultiple".Translate() + " ", ref ProgressionPacingModSettings.roundingMultiple, ref buffer, 1, 10000);
 
             listing.End();
