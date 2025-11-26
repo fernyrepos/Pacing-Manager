@@ -18,7 +18,18 @@ namespace ProgressionPacing
             base.DoSettingsWindowContents(inRect);
             var listing = new Listing_Standard();
             listing.Begin(inRect);
-            listing.Label("PP_ResearchCostMultipliersByTechLevel".Translate());
+            Rect lineRect = listing.GetRect(30f);
+            Rect labelRect = lineRect;
+            labelRect.width -= 104f;
+            Text.Anchor = TextAnchor.MiddleLeft;
+            Widgets.Label(labelRect, "PP_ResearchCostMultipliersByTechLevel".Translate());
+            Text.Anchor = TextAnchor.UpperLeft;
+            Rect buttonRect = new Rect(lineRect.xMax - 100f, lineRect.y, 100f, lineRect.height);
+            if (Widgets.ButtonText(buttonRect, "Reset".Translate()))
+            {
+                ProgressionPacingModSettings.ResetTechLevelMultipliers();
+            }
+            listing.Gap(listing.verticalSpacing);
             foreach (var techLevel in Enum.GetValues(typeof(TechLevel)).Cast<TechLevel>())
             {
                 if (techLevel != TechLevel.Undefined)

@@ -42,6 +42,15 @@ namespace ProgressionPacing
             }
         }
 
+        public static void ResetTechLevelMultipliers()
+        {
+            var keys = techLevelMultipliers.Keys.ToList();
+            foreach (var key in keys)
+            {
+                techLevelMultipliers[key] = 1f;
+            }
+        }
+
         public static void UpdateResearchProjectCosts()
         {
             foreach (var def in DefDatabase<ResearchProjectDef>.AllDefs)
