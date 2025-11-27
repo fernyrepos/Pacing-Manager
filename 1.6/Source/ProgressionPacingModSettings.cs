@@ -26,10 +26,11 @@ namespace ProgressionPacing
             base.ExposeData();
             Scribe_Collections.Look(ref techLevelMultipliers, "techLevelMultipliers", LookMode.Value, LookMode.Value);
             Scribe_Values.Look(ref roundingMultiple, "roundingMultiple", 1);
+        }
 
-            if (techLevelMultipliers == null)
-            {
-                techLevelMultipliers = new Dictionary<TechLevel, float>
+        public static void ResetTechLevelMultipliers()
+        {
+            techLevelMultipliers = new Dictionary<TechLevel, float>
                 {
                     { TechLevel.Animal, 1f },
                     { TechLevel.Neolithic, 1f },
@@ -39,20 +40,16 @@ namespace ProgressionPacing
                     { TechLevel.Ultra, 1f },
                     { TechLevel.Archotech, 1f }
                 };
-            }
         }
-
-        public static void ResetTechLevelMultipliers()
-        {
-            var keys = techLevelMultipliers.Keys.ToList();
-            foreach (var key in keys)
-            {
-                techLevelMultipliers[key] = 1f;
-            }
-        }
+        
+        
 
         public static void UpdateResearchProjectCosts()
         {
+            if (techLevelMultipliers == null)
+            {
+                ResetTechLevelMultipliers();
+            }
             foreach (var def in DefDatabase<ResearchProjectDef>.AllDefs)
             {
                 float multiplier = GetMultiplierForTechLevel(def.techLevel);

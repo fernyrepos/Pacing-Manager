@@ -11,6 +11,7 @@ namespace ProgressionPacing
     {
         public ProgressionPacingMod(ModContentPack pack) : base(pack)
         {
+            GetSettings<ProgressionPacingModSettings>();
         }
 
         public override void DoSettingsWindowContents(Rect inRect)
