@@ -62,6 +62,10 @@ namespace ProgressionPacing
                 {
                     def.baseCost = Mathf.RoundToInt(newCost);
                 }
+                if (def.baseCost < roundingMultiple)
+                {
+                    def.baseCost = roundingMultiple;
+                }
             }
         }
 
