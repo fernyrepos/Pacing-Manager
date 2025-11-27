@@ -7,6 +7,11 @@ using System.Linq;
 
 namespace ProgressionPacing
 {
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
+    public class HotSwappableAttribute : Attribute
+    {
+    }
+    [HotSwappable]
     public class ProgressionPacingMod : Mod
     {
         public ProgressionPacingMod(ModContentPack pack) : base(pack)
@@ -31,19 +36,47 @@ namespace ProgressionPacing
                 ProgressionPacingModSettings.ResetTechLevelMultipliers();
             }
             listing.Gap(listing.verticalSpacing);
+            Text.Font = GameFont.Tiny;
             foreach (var techLevel in Enum.GetValues(typeof(TechLevel)).Cast<TechLevel>())
             {
                 if (techLevel != TechLevel.Undefined)
                 {
                     string label = techLevel.ToString() + ": " + ProgressionPacingModSettings.techLevelMultipliers[techLevel].ToStringPercent();
-                    ProgressionPacingModSettings.techLevelMultipliers[techLevel] = listing.SliderLabeled(label, ProgressionPacingModSettings.techLevelMultipliers[techLevel], 0.01f, 10f, labelPct: 0.15f);
+                    ProgressionPacingModSettings.techLevelMultipliers[techLevel] = listing.SliderLabeled(label, ProgressionPacingModSettings.techLevelMultipliers[techLevel], 0.01f, 10f, labelPct: 0.10f);
                 }
             }
-
+            Text.Font = GameFont.Small;
+            
             listing.Gap();
-            string buffer = ProgressionPacingModSettings.roundingMultiple.ToString();
+            Text.Anchor = TextAnchor.MiddleCenter;
+            listing.Label("PP_RoundingMultiple".Translate());
+            Text.Anchor = TextAnchor.UpperLeft;
+
             listing.curX -= 200;
-            listing.TextFieldNumericLabeled("PP_RoundingMultiple".Translate() + " ", ref ProgressionPacingModSettings.roundingMultiple, ref buffer, 1, 10000);
+            foreach (var techLevel in Enum.GetValues(typeof(TechLevel)).Cast<TechLevel>())
+            {
+                if (techLevel != TechLevel.Undefined)
+                {
+                    string label = techLevel.ToString() + ": ";
+                    int roundingValue = ProgressionPacingModSettings.techLevelRoundingMultiples[techLevel];
+                    string buffer = roundingValue.ToString();
+                    Rect rect = listing.GetRect(Text.LineHeight);
+                    if (!listing.BoundingRectCached.HasValue || rect.Overlaps(listing.BoundingRectCached.Value))
+                    {
+                        Rect rect2 = rect.LeftHalf().Rounded();
+                        Rect rect3 = rect.RightHalf().Rounded();
+                        rect3.height -= 6f;
+                        rect3.y += 3f;
+                        TextAnchor anchor = Text.Anchor;
+                        Text.Anchor = TextAnchor.MiddleRight;
+                        Widgets.Label(rect2, label);
+                        Text.Anchor = anchor;
+                        Widgets.TextFieldNumeric(rect3, ref roundingValue, ref buffer, 1, 10000);
+                    }
+                    listing.Gap(listing.verticalSpacing);
+                    ProgressionPacingModSettings.techLevelRoundingMultiples[techLevel] = roundingValue;
+                }
+            }
 
             listing.End();
         }
