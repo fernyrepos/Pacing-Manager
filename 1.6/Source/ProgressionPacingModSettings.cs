@@ -61,10 +61,26 @@ namespace ProgressionPacing
                 };
         }
         
-        
+        private static Dictionary<ResearchProjectDef, float> originalResearchCosts = null;
 
         public static void UpdateResearchProjectCosts()
         {
+            if (originalResearchCosts == null)
+            {
+                originalResearchCosts = new Dictionary<ResearchProjectDef, float>();
+                foreach (var def in DefDatabase<ResearchProjectDef>.AllDefs)
+                {
+                    originalResearchCosts[def] = def.baseCost;
+                }
+            }
+            else
+            {
+                foreach (var kvp in originalResearchCosts)
+                {
+                    kvp.Key.baseCost = kvp.Value;
+                }
+            }
+            
             if (techLevelMultipliers == null || techLevelRoundingMultiples == null)
             {
                 ResetTechLevelMultipliers();
