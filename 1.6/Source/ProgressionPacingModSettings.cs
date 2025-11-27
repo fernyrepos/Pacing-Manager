@@ -19,13 +19,22 @@ namespace ProgressionPacing
             { TechLevel.Ultra, 1f },
             { TechLevel.Archotech, 1f }
         };
-        public static int roundingMultiple = 1;
+        public static Dictionary<TechLevel, int> techLevelRoundingMultiples = new Dictionary<TechLevel, int>
+        {
+            { TechLevel.Animal, 1 },
+            { TechLevel.Neolithic, 1 },
+            { TechLevel.Medieval, 1 },
+            { TechLevel.Industrial, 1 },
+            { TechLevel.Spacer, 1 },
+            { TechLevel.Ultra, 1 },
+            { TechLevel.Archotech, 1 }
+        };
 
         public override void ExposeData()
         {
             base.ExposeData();
             Scribe_Collections.Look(ref techLevelMultipliers, "techLevelMultipliers", LookMode.Value, LookMode.Value);
-            Scribe_Values.Look(ref roundingMultiple, "roundingMultiple", 1);
+            Scribe_Collections.Look(ref techLevelRoundingMultiples, "techLevelRoundingMultiples", LookMode.Value, LookMode.Value);
         }
 
         public static void ResetTechLevelMultipliers()
@@ -40,13 +49,23 @@ namespace ProgressionPacing
                     { TechLevel.Ultra, 1f },
                     { TechLevel.Archotech, 1f }
                 };
+            techLevelRoundingMultiples = new Dictionary<TechLevel, int>
+                {
+                    { TechLevel.Animal, 1 },
+                    { TechLevel.Neolithic, 1 },
+                    { TechLevel.Medieval, 1 },
+                    { TechLevel.Industrial, 1 },
+                    { TechLevel.Spacer, 1 },
+                    { TechLevel.Ultra, 1 },
+                    { TechLevel.Archotech, 1 }
+                };
         }
         
         
 
         public static void UpdateResearchProjectCosts()
         {
-            if (techLevelMultipliers == null)
+            if (techLevelMultipliers == null || techLevelRoundingMultiples == null)
             {
                 ResetTechLevelMultipliers();
             }
@@ -54,6 +73,7 @@ namespace ProgressionPacing
             {
                 float multiplier = GetMultiplierForTechLevel(def.techLevel);
                 float newCost = def.baseCost * multiplier;
+                int roundingMultiple = GetRoundingMultipleForTechLevel(def.techLevel);
                 if (roundingMultiple > 1)
                 {
                     def.baseCost = Mathf.RoundToInt(newCost / roundingMultiple) * roundingMultiple;
@@ -76,6 +96,15 @@ namespace ProgressionPacing
                 return multiplier;
             }
             return 1f;
+        }
+
+        public static int GetRoundingMultipleForTechLevel(TechLevel techLevel)
+        {
+            if (techLevelRoundingMultiples.TryGetValue(techLevel, out int roundingMultiple))
+            {
+                return roundingMultiple;
+            }
+            return 1;
         }
     }
 }
