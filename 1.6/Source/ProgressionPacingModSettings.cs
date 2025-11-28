@@ -30,11 +30,13 @@ namespace ProgressionPacing
             { TechLevel.Archotech, 1 }
         };
 
+        public static bool excludeGravdata;
         public override void ExposeData()
         {
             base.ExposeData();
             Scribe_Collections.Look(ref techLevelMultipliers, "techLevelMultipliers", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref techLevelRoundingMultiples, "techLevelRoundingMultiples", LookMode.Value, LookMode.Value);
+            Scribe_Values.Look(ref excludeGravdata, "excludeGravdata");
         }
 
         public static void ResetTechLevelMultipliers()
@@ -87,6 +89,8 @@ namespace ProgressionPacing
             }
             foreach (var def in DefDatabase<ResearchProjectDef>.AllDefs)
             {
+                if (def.knowledgeCost > 0) continue;
+                if (ModsConfig.IsActive("vanillaexpanded.gravship") && excludeGravdata && def.tab?.defName == "VGE_Gravtech") continue;
                 float multiplier = GetMultiplierForTechLevel(def.techLevel);
                 float newCost = def.baseCost * multiplier;
                 int roundingMultiple = GetRoundingMultipleForTechLevel(def.techLevel);

@@ -77,7 +77,11 @@ namespace ProgressionPacing
                     ProgressionPacingModSettings.techLevelRoundingMultiples[techLevel] = roundingValue;
                 }
             }
-
+            listing.curX += 200;
+            if (ModsConfig.IsActive("vanillaexpanded.gravship"))
+            {
+                listing.CheckboxLabeled("PP_ExcludeGravdata".Translate(), ref ProgressionPacingModSettings.excludeGravdata);
+            }
             listing.End();
         }
 
