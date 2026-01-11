@@ -31,6 +31,7 @@ namespace ProgressionPacing
         };
 
         public static float powerOutputMultiplier = 1f;
+        public static int powerOutputRoundingMultiple = 1;
         public static bool excludeGravdata;
         public override void ExposeData()
         {
@@ -38,6 +39,7 @@ namespace ProgressionPacing
             Scribe_Collections.Look(ref techLevelMultipliers, "techLevelMultipliers", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref techLevelRoundingMultiples, "techLevelRoundingMultiples", LookMode.Value, LookMode.Value);
             Scribe_Values.Look(ref powerOutputMultiplier, "powerOutputMultiplier", 1f);
+            Scribe_Values.Look(ref powerOutputRoundingMultiple, "powerOutputRoundingMultiple", 1);
             Scribe_Values.Look(ref excludeGravdata, "excludeGravdata");
         }
 
@@ -63,6 +65,8 @@ namespace ProgressionPacing
                     { TechLevel.Ultra, 1 },
                     { TechLevel.Archotech, 1 }
                 };
+            powerOutputMultiplier = 1f;
+            powerOutputRoundingMultiple = 1;
         }
         
         private static Dictionary<ResearchProjectDef, float> originalResearchCosts = null;

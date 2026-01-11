@@ -1,5 +1,6 @@
 using HarmonyLib;
 using RimWorld;
+using UnityEngine;
 
 namespace ProgressionPacing
 {
@@ -11,6 +12,18 @@ namespace ProgressionPacing
             if (value > 0f && ProgressionPacingModSettings.powerOutputMultiplier != 1f)
             {
                 value *= ProgressionPacingModSettings.powerOutputMultiplier;
+                if (ProgressionPacingModSettings.powerOutputRoundingMultiple > 1)
+                {
+                    value = Mathf.RoundToInt(value / ProgressionPacingModSettings.powerOutputRoundingMultiple) * ProgressionPacingModSettings.powerOutputRoundingMultiple;
+                }
+                else
+                {
+                    value = Mathf.RoundToInt(value);
+                }
+                if (value < ProgressionPacingModSettings.powerOutputRoundingMultiple)
+                {
+                    value = ProgressionPacingModSettings.powerOutputRoundingMultiple;
+                }
             }
         }
     }

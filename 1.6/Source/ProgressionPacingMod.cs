@@ -86,6 +86,30 @@ namespace ProgressionPacing
             listing.Gap();
             string powerOutputLabel = "PP_PowerOutputMultiplier".Translate() + ": " + ProgressionPacingModSettings.powerOutputMultiplier.ToStringPercent();
             ProgressionPacingModSettings.powerOutputMultiplier = listing.SliderLabeled(powerOutputLabel, ProgressionPacingModSettings.powerOutputMultiplier, 0.01f, 10f, labelPct: 0.30f);
+            listing.Gap();
+            Text.Anchor = TextAnchor.MiddleCenter;
+            listing.Label("PP_PowerOutputRoundingMultiple".Translate());
+            Text.Anchor = TextAnchor.UpperLeft;
+            listing.curX -= 200;
+            string powerOutputRoundingLabel = "";
+            int powerOutputRoundingValue = ProgressionPacingModSettings.powerOutputRoundingMultiple;
+            string powerOutputRoundingBuffer = powerOutputRoundingValue.ToString();
+            Rect powerOutputRoundingRect = listing.GetRect(Text.LineHeight);
+            if (!listing.BoundingRectCached.HasValue || powerOutputRoundingRect.Overlaps(listing.BoundingRectCached.Value))
+            {
+                Rect powerOutputRoundingRect2 = powerOutputRoundingRect.LeftHalf().Rounded();
+                Rect powerOutputRoundingRect3 = powerOutputRoundingRect.RightHalf().Rounded();
+                powerOutputRoundingRect3.height -= 6f;
+                powerOutputRoundingRect3.y += 3f;
+                TextAnchor powerOutputRoundingAnchor = Text.Anchor;
+                Text.Anchor = TextAnchor.MiddleRight;
+                Widgets.Label(powerOutputRoundingRect2, powerOutputRoundingLabel);
+                Text.Anchor = powerOutputRoundingAnchor;
+                Widgets.TextFieldNumeric(powerOutputRoundingRect3, ref powerOutputRoundingValue, ref powerOutputRoundingBuffer, 1, 10000);
+            }
+            listing.Gap(listing.verticalSpacing);
+            ProgressionPacingModSettings.powerOutputRoundingMultiple = powerOutputRoundingValue;
+            listing.curX += 200;
             listing.End();
         }
 

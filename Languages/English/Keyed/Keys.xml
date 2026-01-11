@@ -4,4 +4,5 @@
   <PP_RoundingMultiple>Round research project values to multiples of:</PP_RoundingMultiple>
   <PP_ExcludeGravdata>Exclude gravdata</PP_ExcludeGravdata>
   <PP_PowerOutputMultiplier>Global power output multiplier</PP_PowerOutputMultiplier>
+  <PP_PowerOutputRoundingMultiple>Round power output values to multiples of:</PP_PowerOutputRoundingMultiple>
 </LanguageData>
