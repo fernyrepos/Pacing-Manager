@@ -20,11 +20,15 @@ namespace ProgressionPacing
             new Harmony("ProgressionPacingMod").PatchAll();
         }
 
+        private static float scrollHeight = 999999f;
         public override void DoSettingsWindowContents(Rect inRect)
         {
             base.DoSettingsWindowContents(inRect);
+            Rect viewRect = new Rect(0, 0, inRect.width - 16f, scrollHeight);
+            Widgets.BeginScrollView(inRect, ref scrollPosition, viewRect);
+            
             var listing = new Listing_Standard();
-            listing.Begin(inRect);
+            listing.Begin(viewRect);
             Rect lineRect = listing.GetRect(30f);
             Rect labelRect = lineRect;
             labelRect.width -= 104f;
@@ -110,8 +114,13 @@ namespace ProgressionPacing
             listing.Gap(listing.verticalSpacing);
             ProgressionPacingModSettings.powerOutputRoundingMultiple = powerOutputRoundingValue;
             listing.curX += 200;
+            scrollHeight = listing.CurHeight + 20f;
             listing.End();
+            
+            Widgets.EndScrollView();
         }
+        
+        private Vector2 scrollPosition = Vector2.zero;
 
         public override void WriteSettings()
         {
