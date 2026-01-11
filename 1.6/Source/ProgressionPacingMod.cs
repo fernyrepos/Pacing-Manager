@@ -17,6 +17,7 @@ namespace ProgressionPacing
         public ProgressionPacingMod(ModContentPack pack) : base(pack)
         {
             GetSettings<ProgressionPacingModSettings>();
+            new Harmony("ProgressionPacingMod").PatchAll();
         }
 
         public override void DoSettingsWindowContents(Rect inRect)
@@ -82,6 +83,9 @@ namespace ProgressionPacing
             {
                 listing.CheckboxLabeled("PP_ExcludeGravdata".Translate(), ref ProgressionPacingModSettings.excludeGravdata);
             }
+            listing.Gap();
+            string powerOutputLabel = "PP_PowerOutputMultiplier".Translate() + ": " + ProgressionPacingModSettings.powerOutputMultiplier.ToStringPercent();
+            ProgressionPacingModSettings.powerOutputMultiplier = listing.SliderLabeled(powerOutputLabel, ProgressionPacingModSettings.powerOutputMultiplier, 0.01f, 10f, labelPct: 0.30f);
             listing.End();
         }
 

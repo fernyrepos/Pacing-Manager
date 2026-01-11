@@ -3,4 +3,5 @@
   <PP_ResearchCostMultipliersByTechLevel>Research cost multipliers by tech level</PP_ResearchCostMultipliersByTechLevel>
   <PP_RoundingMultiple>Round research project values to multiples of:</PP_RoundingMultiple>
   <PP_ExcludeGravdata>Exclude gravdata</PP_ExcludeGravdata>
+  <PP_PowerOutputMultiplier>Global power output multiplier</PP_PowerOutputMultiplier>
 </LanguageData>

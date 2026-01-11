@@ -30,12 +30,14 @@ namespace ProgressionPacing
             { TechLevel.Archotech, 1 }
         };
 
+        public static float powerOutputMultiplier = 1f;
         public static bool excludeGravdata;
         public override void ExposeData()
         {
             base.ExposeData();
             Scribe_Collections.Look(ref techLevelMultipliers, "techLevelMultipliers", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref techLevelRoundingMultiples, "techLevelRoundingMultiples", LookMode.Value, LookMode.Value);
+            Scribe_Values.Look(ref powerOutputMultiplier, "powerOutputMultiplier", 1f);
             Scribe_Values.Look(ref excludeGravdata, "excludeGravdata");
         }
 
