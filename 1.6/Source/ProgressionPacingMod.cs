@@ -4,6 +4,7 @@ using UnityEngine;
 using RimWorld;
 using System;
 using System.Linq;
+using System.Collections.Generic;
 
 namespace ProgressionPacing
 {
@@ -132,6 +133,100 @@ namespace ProgressionPacing
         public override string SettingsCategory()
         {
             return Content.Name;
+        }
+    }
+
+    public class ProgressionPacingGameComponent : GameComponent
+    {
+        public Dictionary<TechLevel, float> savedMultipliers = new Dictionary<TechLevel, float>();
+        public Dictionary<TechLevel, int> savedRoundingMultiples = new Dictionary<TechLevel, int>();
+
+        public ProgressionPacingGameComponent(Game game)
+        {
+        }
+
+        public override void ExposeData()
+        {
+            Scribe_Collections.Look(ref savedMultipliers, "savedMultipliers", LookMode.Value, LookMode.Value);
+            Scribe_Collections.Look(ref savedRoundingMultiples, "savedRoundingMultiples", LookMode.Value, LookMode.Value);
+
+            if (Scribe.mode == LoadSaveMode.PostLoadInit)
+            {
+                if (savedMultipliers == null) savedMultipliers = new Dictionary<TechLevel, float>();
+                if (savedRoundingMultiples == null) savedRoundingMultiples = new Dictionary<TechLevel, int>();
+                
+                FixResearchProgress();
+                UpdateSavedMultipliers();
+            }
+        }
+
+        public override void StartedNewGame()
+        {
+            base.StartedNewGame();
+            UpdateSavedMultipliers();
+        }
+
+        public void UpdateSavedMultipliers()
+        {
+            savedMultipliers.Clear();
+            savedRoundingMultiples.Clear();
+            foreach (TechLevel level in Enum.GetValues(typeof(TechLevel)))
+            {
+                if (level != TechLevel.Undefined)
+                {
+                    savedMultipliers[level] = ProgressionPacingModSettings.GetMultiplierForTechLevel(level);
+                    savedRoundingMultiples[level] = ProgressionPacingModSettings.GetRoundingMultipleForTechLevel(level);
+                }
+            }
+        }
+
+        private void FixResearchProgress()
+        {
+            if (Find.ResearchManager == null) return;
+            var progressDict = Find.ResearchManager.progress;
+            if (progressDict == null) return;
+
+            bool wasEmpty = savedMultipliers.Count == 0;
+
+            foreach (var def in progressDict.Keys.ToList())
+            {
+                if (def.knowledgeCost > 0) continue;
+                if (ProgressionPacingModSettings.excludeGravdata && ModsConfig.IsActive("vanillaexpanded.gravship") && def.tab?.defName == "VGE_Gravtech") continue;
+
+                if (progressDict.TryGetValue(def, out float currentProgress) && currentProgress > 0)
+                {
+                    float oldMultiplier = wasEmpty ? 1f : (savedMultipliers.TryGetValue(def.techLevel, out float m) ? m : 1f);
+                    int oldRounding = wasEmpty ? 1 : (savedRoundingMultiples.TryGetValue(def.techLevel, out int r) ? r : 1);
+
+                    float originalVanillaCost = ProgressionPacingModSettings.originalResearchCosts != null && ProgressionPacingModSettings.originalResearchCosts.TryGetValue(def, out float orig) ? orig : def.baseCost;
+
+                    float savedCost = originalVanillaCost * oldMultiplier;
+                    if (oldRounding > 1)
+                    {
+                        savedCost = Mathf.RoundToInt(savedCost / oldRounding) * oldRounding;
+                    }
+                    else
+                    {
+                        savedCost = Mathf.RoundToInt(savedCost);
+                    }
+                    if (savedCost < oldRounding) savedCost = oldRounding;
+
+                    float currentCost = def.baseCost;
+
+                    if (savedCost > 0 && currentCost > 0 && Math.Abs(savedCost - currentCost) > 0.1f)
+                    {
+                        float ratio = currentCost / savedCost;
+                        float newProgress = currentProgress * ratio;
+
+                        if (currentProgress >= savedCost - 0.01f)
+                        {
+                            newProgress = Mathf.Max(newProgress, currentCost);
+                        }
+
+                        progressDict[def] = newProgress;
+                    }
+                }
+            }
         }
     }
 }

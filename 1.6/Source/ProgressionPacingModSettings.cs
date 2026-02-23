@@ -69,7 +69,7 @@ namespace ProgressionPacing
             powerOutputRoundingMultiple = 1;
         }
         
-        private static Dictionary<ResearchProjectDef, float> originalResearchCosts = null;
+        public static Dictionary<ResearchProjectDef, float> originalResearchCosts = null;
 
         public static void UpdateResearchProjectCosts()
         {
@@ -81,18 +81,23 @@ namespace ProgressionPacing
                     originalResearchCosts[def] = def.baseCost;
                 }
             }
-            else
+
+            Dictionary<ResearchProjectDef, float> oldCosts = new Dictionary<ResearchProjectDef, float>();
+            foreach (var def in DefDatabase<ResearchProjectDef>.AllDefs)
             {
-                foreach (var kvp in originalResearchCosts)
-                {
-                    kvp.Key.baseCost = kvp.Value;
-                }
+                oldCosts[def] = def.baseCost;
+            }
+
+            foreach (var kvp in originalResearchCosts)
+            {
+                kvp.Key.baseCost = kvp.Value;
             }
             
             if (techLevelMultipliers == null || techLevelRoundingMultiples == null)
             {
                 ResetTechLevelMultipliers();
             }
+
             foreach (var def in DefDatabase<ResearchProjectDef>.AllDefs)
             {
                 if (def.knowledgeCost > 0) continue;
@@ -111,6 +116,41 @@ namespace ProgressionPacing
                 if (def.baseCost < roundingMultiple)
                 {
                     def.baseCost = roundingMultiple;
+                }
+            }
+
+            if (Current.ProgramState == ProgramState.Playing && Find.ResearchManager != null)
+            {
+                var progressDict = Find.ResearchManager.progress;
+                if (progressDict != null)
+                {
+                    foreach (var def in DefDatabase<ResearchProjectDef>.AllDefs)
+                    {
+                        if (progressDict.TryGetValue(def, out float currentProgress) && currentProgress > 0)
+                        {
+                            float oldCost = oldCosts[def];
+                            float newCost = def.baseCost;
+                            
+                            if (oldCost > 0 && newCost > 0 && Math.Abs(oldCost - newCost) > 0.1f)
+                            {
+                                float ratio = newCost / oldCost;
+                                float newProgress = currentProgress * ratio;
+                                
+                                if (currentProgress >= oldCost - 0.01f)
+                                {
+                                    newProgress = Mathf.Max(newProgress, newCost);
+                                }
+                                
+                                progressDict[def] = newProgress;
+                            }
+                        }
+                    }
+                }
+
+                var comp = Current.Game?.GetComponent<ProgressionPacingGameComponent>();
+                if (comp != null)
+                {
+                    comp.UpdateSavedMultipliers();
                 }
             }
         }
