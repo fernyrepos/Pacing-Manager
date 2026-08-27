@@ -15,5 +15,10 @@
         <li>Ludeon.RimWorld.Anomaly</li>
         <li>Ludeon.RimWorld.Odyssey</li>
         <li>brrainz.harmony</li>
+        <li>OskarPotocki.VanillaFactionsExpanded.Core</li>
+        <li>sarg.alphacrafts</li>
+        <li>sarg.alphagenes</li>
+        <li>sarg.alphabooks</li>
+        <li>VanillaExpanded.VGeneticsE</li>
     </loadAfter>
 </ModMetaData>

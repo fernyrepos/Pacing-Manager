@@ -41,4 +41,14 @@
   <PP_QuestCycleDaysTip>How many days each quest cycle lasts. Longer cycles mean random quests arrive less often.</PP_QuestCycleDaysTip>
   <PP_QuestMinDaysBetweenTip>Minimum days the storyteller waits between random quests in the same cycle.</PP_QuestMinDaysBetweenTip>
   <PP_QuestCountTip>How many random quests the storyteller tries to offer in each cycle.</PP_QuestCountTip>
+  <PP_QuestGeneratorsSection>Quest Generators</PP_QuestGeneratorsSection>
+  <PP_QuestGeneratorsSectionTip>Restrict the tech era in which specific mods' special quest generators can offer their quests.</PP_QuestGeneratorsSectionTip>
+  <PP_QuestGenMinEra>Min era:</PP_QuestGenMinEra>
+  <PP_QuestGenMaxEra>Max era:</PP_QuestGenMaxEra>
+  <PP_QuestGen_AlphaCraftsArtisan>Alpha Crafts: Artisan trade requests</PP_QuestGen_AlphaCraftsArtisan>
+  <PP_QuestGen_AlphaGenesBiotechLab>Alpha Genes: Abandoned biotech labs</PP_QuestGen_AlphaGenesBiotechLab>
+  <PP_QuestGen_VGEGeneticsLab>Vanilla Genetics Expanded: Abandoned genetics labs</PP_QuestGen_VGEGeneticsLab>
+  <PP_QuestGen_AlphaBooksLibrary>Alpha Books: Ruined libraries</PP_QuestGen_AlphaBooksLibrary>
+  <PP_QuestGenDelayRange>Extra delay: {0} days</PP_QuestGenDelayRange>
+  <PP_QuestGenDelayRangeTip>Once this chain's first quest is otherwise ready to fire, wait a random number of days in this range on top of that before it actually arrives. Set both to 0 to disable this extra delay.</PP_QuestGenDelayRangeTip>
 </LanguageData>

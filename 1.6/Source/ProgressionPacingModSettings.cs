@@ -31,6 +31,30 @@ namespace ProgressionPacing
         }
     }
 
+    public class QuestGeneratorEraRange : IExposable
+    {
+        public TechLevel minEra = TechLevel.Animal;
+        public TechLevel maxEra = TechLevel.Archotech;
+
+        public void ExposeData()
+        {
+            Scribe_Values.Look(ref minEra, "minEra", TechLevel.Animal);
+            Scribe_Values.Look(ref maxEra, "maxEra", TechLevel.Archotech);
+        }
+
+        public bool Allows(TechLevel era)
+        {
+            return era >= minEra && era <= maxEra;
+        }
+    }
+
+    public class QuestGeneratorDef
+    {
+        public string key;
+        public string modPackageId;
+        public string labelKey;
+    }
+
     public class ProgressionPacingModSettings : ModSettings
     {
         public static Dictionary<TechLevel, float> techLevelMultipliers = CreateDefaultMultipliers();
@@ -42,6 +66,18 @@ namespace ProgressionPacing
         public static bool excludeGravdata;
 
         public static Dictionary<string, QuestPacingValues> questPacingByComp = new Dictionary<string, QuestPacingValues>();
+
+        public static readonly List<QuestGeneratorDef> FixedQuestGenerators = new List<QuestGeneratorDef>
+        {
+            new QuestGeneratorDef { key = "AC_ArtisanTradeRequest", modPackageId = "sarg.alphacrafts", labelKey = "PP_QuestGen_AlphaCraftsArtisan" },
+            new QuestGeneratorDef { key = "AG_OpportunitySite_AbandonedBiotechLab", modPackageId = "sarg.alphagenes", labelKey = "PP_QuestGen_AlphaGenesBiotechLab" },
+            new QuestGeneratorDef { key = "GR_OpportunitySite_AbandonedLab", modPackageId = "VanillaExpanded.VGeneticsE", labelKey = "PP_QuestGen_VGEGeneticsLab" },
+            new QuestGeneratorDef { key = "Abooks_OpportunitySite_RuinedLibrary", modPackageId = "sarg.alphabooks", labelKey = "PP_QuestGen_AlphaBooksLibrary" },
+        };
+
+        public static Dictionary<string, QuestGeneratorEraRange> questGeneratorEraRanges = new Dictionary<string, QuestGeneratorEraRange>();
+
+        public static Dictionary<string, IntRange> questChainDelayRanges = new Dictionary<string, IntRange>();
 
         public static Dictionary<ResearchProjectDef, float> originalResearchCosts = null;
 
@@ -64,6 +100,8 @@ namespace ProgressionPacing
             Scribe_Values.Look(ref powerOutputRoundingMultiple, "powerOutputRoundingMultiple", 1);
             Scribe_Values.Look(ref excludeGravdata, "excludeGravdata");
             Scribe_Collections.Look(ref questPacingByComp, "questPacingByComp", LookMode.Value, LookMode.Deep);
+            Scribe_Collections.Look(ref questGeneratorEraRanges, "questGeneratorEraRanges", LookMode.Value, LookMode.Deep);
+            Scribe_Collections.Look(ref questChainDelayRanges, "questChainDelayRanges", LookMode.Value, LookMode.Value);
             EnsureDictionaries();
         }
 
@@ -73,6 +111,8 @@ namespace ProgressionPacing
             if (techLevelRoundingMultiples == null) techLevelRoundingMultiples = CreateDefaultRoundingMultiples();
             if (techLevelAddons == null) techLevelAddons = CreateDefaultAddons();
             if (questPacingByComp == null) questPacingByComp = new Dictionary<string, QuestPacingValues>();
+            if (questGeneratorEraRanges == null) questGeneratorEraRanges = new Dictionary<string, QuestGeneratorEraRange>();
+            if (questChainDelayRanges == null) questChainDelayRanges = new Dictionary<string, IntRange>();
             foreach (TechLevel level in Enum.GetValues(typeof(TechLevel)))
             {
                 if (level == TechLevel.Undefined) continue;
@@ -80,6 +120,80 @@ namespace ProgressionPacing
                 if (!techLevelRoundingMultiples.ContainsKey(level)) techLevelRoundingMultiples[level] = 1;
                 if (!techLevelAddons.ContainsKey(level)) techLevelAddons[level] = 0;
             }
+            foreach (var gen in FixedQuestGenerators)
+            {
+                if (!questGeneratorEraRanges.ContainsKey(gen.key)) questGeneratorEraRanges[gen.key] = new QuestGeneratorEraRange();
+            }
+            QuestChainCompat.EnsureEraRangeEntries(questGeneratorEraRanges);
+            QuestChainCompat.EnsureDelayRangeEntries(questChainDelayRanges);
+        }
+
+        public static QuestGeneratorEraRange GetOrCreateEraRange(string key)
+        {
+            EnsureDictionaries();
+            if (!questGeneratorEraRanges.TryGetValue(key, out QuestGeneratorEraRange range) || range == null)
+            {
+                range = new QuestGeneratorEraRange();
+                questGeneratorEraRanges[key] = range;
+            }
+            return range;
+        }
+
+        public static bool IsQuestGeneratorAllowed(string key)
+        {
+            if (questGeneratorEraRanges == null) return true;
+            if (!questGeneratorEraRanges.TryGetValue(key, out QuestGeneratorEraRange range) || range == null) return true;
+            return range.Allows(GetCurrentPlayerEra());
+        }
+
+        public static void ResetQuestGeneratorEraRanges()
+        {
+            EnsureDictionaries();
+            foreach (var range in questGeneratorEraRanges.Values)
+            {
+                range.minEra = TechLevel.Animal;
+                range.maxEra = TechLevel.Archotech;
+            }
+        }
+
+        public static IntRange GetOrCreateChainDelayRange(string key)
+        {
+            EnsureDictionaries();
+            if (!questChainDelayRanges.TryGetValue(key, out IntRange range))
+            {
+                range = new IntRange(0, 0);
+                questChainDelayRanges[key] = range;
+            }
+            return range;
+        }
+
+        public static void SetChainDelayRange(string key, IntRange range)
+        {
+            questChainDelayRanges[key] = range;
+        }
+
+        public static IntRange GetChainDelayRange(string key)
+            if (questChainDelayRanges != null && questChainDelayRanges.TryGetValue(key, out IntRange range))
+            {
+                return range;
+            }
+            return new IntRange(0, 0);
+        }
+
+        public static void ResetQuestChainDelayRanges()
+        {
+            EnsureDictionaries();
+            var keys = new List<string>(questChainDelayRanges.Keys);
+            foreach (var key in keys)
+            {
+                questChainDelayRanges[key] = new IntRange(0, 0);
+            }
+        }
+
+        public static TechLevel GetCurrentPlayerEra()
+        {
+            TechLevel level = Faction.OfPlayer?.def.techLevel ?? TechLevel.Undefined;
+            return level == TechLevel.Undefined ? TechLevel.Animal : level;
         }
 
         public static void ResetResearchSettings()

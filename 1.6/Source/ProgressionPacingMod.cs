@@ -18,7 +18,9 @@ namespace ProgressionPacing
         public ProgressionPacingMod(ModContentPack pack) : base(pack)
         {
             GetSettings<ProgressionPacingModSettings>();
-            new Harmony("ProgressionPacingMod").PatchAll();
+            var harmony = new Harmony("ProgressionPacingMod");
+            harmony.PatchAll();
+            QuestChainCompat.ApplyPatch(harmony);
         }
 
         private float scrollHeight = 0f;
@@ -32,15 +34,22 @@ namespace ProgressionPacing
         private readonly Dictionary<string, string> questBuffers = new Dictionary<string, string>();
         private string powerOutputRoundingBuffer;
 
+        private static readonly TechLevel[] SelectableEras =
+        {
+            TechLevel.Animal, TechLevel.Neolithic, TechLevel.Medieval, TechLevel.Industrial,
+            TechLevel.Spacer, TechLevel.Ultra, TechLevel.Archotech
+        };
+
+        private static readonly Color EraButtonColor = new Color(0.25f, 0.25f, 0.25f);
+
         private const float NumericFieldHeight = 30f;
+        private const float DelayRangeHeight = 36f;
         private const float NumericFieldPadding = 16f;
         private const float ControlGap = 12f;
         private const float MinSliderWidth = 80f;
         private const float ScrollbarWidth = 20f;
         private const float ContentRightPadding = 16f;
         private const int AddonMaxValue = 99999999;
-
-        private static readonly Color ResetButtonColor = new Color(0.48f, 0.12f, 0.12f);
 
         public override void DoSettingsWindowContents(Rect inRect)
         {
@@ -90,6 +99,8 @@ namespace ProgressionPacing
             questSectionExpanded = DrawSectionHeader(listing, "PP_QuestSection".Translate(), "PP_QuestSectionTip".Translate(), "PP_QuestResetTip".Translate(), questSectionExpanded, () =>
             {
                 ProgressionPacingModSettings.ResetQuestPacing();
+                ProgressionPacingModSettings.ResetQuestGeneratorEraRanges();
+                ProgressionPacingModSettings.ResetQuestChainDelayRanges();
                 questBuffers.Clear();
             });
             if (questSectionExpanded)
@@ -122,7 +133,7 @@ namespace ProgressionPacing
 
             Text.Font = GameFont.Small;
             TooltipHandler.TipRegion(resetRect, resetTip);
-            if (DrawColoredButton(resetRect, "Reset".Translate(), ResetButtonColor, Color.white))
+            if (Widgets.ButtonText(resetRect, "Reset".Translate()))
             {
                 onReset?.Invoke();
             }
@@ -253,6 +264,10 @@ namespace ProgressionPacing
         private void DrawQuestSection(Listing_Standard listing)
         {
             ProgressionPacingModSettings.EnsureDictionaries();
+
+            DrawQuestGeneratorsSection(listing);
+            listing.GapLine();
+
             StorytellerDef storyteller = ProgressionPacingModSettings.CurrentStorytellerDef();
             if (storyteller == null)
             {
@@ -261,11 +276,6 @@ namespace ProgressionPacing
             }
 
             var entries = ProgressionPacingModSettings.CurrentStorytellerQuestComps().ToList();
-            if (entries.Count == 0)
-            {
-                listing.Label("PP_QuestNoRandomQuests".Translate(storyteller.LabelCap));
-                return;
-            }
 
             Text.Font = GameFont.Medium;
             Rect storytellerRect = listing.GetRect(Text.LineHeight + 4f);
@@ -274,6 +284,12 @@ namespace ProgressionPacing
             Text.Anchor = TextAnchor.UpperLeft;
             Text.Font = GameFont.Small;
             TooltipHandler.TipRegion(storytellerRect, "PP_CurrentStorytellerTip".Translate());
+
+            if (entries.Count == 0)
+            {
+                listing.Label("PP_QuestNoRandomQuests".Translate(storyteller.LabelCap));
+                return;
+            }
 
             foreach (var entry in entries)
             {
@@ -300,6 +316,124 @@ namespace ProgressionPacing
             }
             DrawLabeledNumeric(listing, label, NumericFieldWidth(), ref value, ref buffer, min, max, tooltip, labelColumnWidth);
             questBuffers[bufferKey] = buffer;
+        }
+
+        private void DrawQuestGeneratorsSection(Listing_Standard listing)
+        {
+            ProgressionPacingModSettings.EnsureDictionaries();
+
+            var rows = new List<(string key, string label, bool isChain)>();
+            foreach (var gen in ProgressionPacingModSettings.FixedQuestGenerators)
+            {
+                if (ModsConfig.IsActive(gen.modPackageId))
+                {
+                    rows.Add((gen.key, (string)gen.labelKey.Translate(), false));
+                }
+            }
+            foreach (var entry in QuestChainCompat.ChainEntries())
+            {
+                rows.Add((entry.key, entry.label, true));
+            }
+
+            if (rows.Count == 0) return;
+
+            listing.Gap();
+            Text.Font = GameFont.Medium;
+            Rect headingRect = listing.GetRect(Text.LineHeight + 4f);
+            Text.Anchor = TextAnchor.MiddleLeft;
+            Widgets.Label(headingRect, "PP_QuestGeneratorsSection".Translate());
+            Text.Anchor = TextAnchor.UpperLeft;
+            Text.Font = GameFont.Small;
+            TooltipHandler.TipRegion(headingRect, "PP_QuestGeneratorsSectionTip".Translate());
+
+            foreach (var (key, label, isChain) in rows)
+            {
+                DrawEraRangeRow(listing, key, label, isChain);
+            }
+
+            listing.Gap();
+        }
+
+        private static void DrawEraRangeRow(Listing_Standard listing, string key, string label, bool isChain)
+        {
+            QuestGeneratorEraRange range = ProgressionPacingModSettings.GetOrCreateEraRange(key);
+
+            Text.Font = GameFont.Medium;
+            Rect titleRow = listing.GetRect(NumericFieldHeight);
+            if (IsRectVisible(listing, titleRow))
+            {
+                Text.Anchor = TextAnchor.MiddleLeft;
+                Widgets.Label(titleRow, label);
+                Text.Anchor = TextAnchor.UpperLeft;
+            }
+            Text.Font = GameFont.Small;
+
+            Rect controlRow = listing.GetRect(NumericFieldHeight);
+            if (IsRectVisible(listing, controlRow))
+            {
+                float half = (controlRow.width - ControlGap) / 2f;
+                Rect minRect = new Rect(controlRow.x, controlRow.y, half, controlRow.height);
+                Rect maxRect = new Rect(minRect.xMax + ControlGap, controlRow.y, half, controlRow.height);
+
+                TechLevel minEra = range.minEra;
+                TechLevel maxEra = range.maxEra;
+                DrawEraPicker(minRect, "PP_QuestGenMinEra".Translate(), ref minEra);
+                DrawEraPicker(maxRect, "PP_QuestGenMaxEra".Translate(), ref maxEra);
+                if (maxEra < minEra) maxEra = minEra;
+                range.minEra = minEra;
+                range.maxEra = maxEra;
+            }
+
+            if (isChain)
+            {
+                DrawChainDelayRow(listing, key);
+            }
+
+            listing.GapLine();
+        }
+
+        private static void DrawChainDelayRow(Listing_Standard listing, string key)
+        {
+            IntRange delayRange = ProgressionPacingModSettings.GetOrCreateChainDelayRange(key);
+
+            Rect delayRow = listing.GetRect(DelayRangeHeight);
+            if (IsRectVisible(listing, delayRow))
+            {
+                Widgets.IntRange(delayRow, key.GetHashCode(), ref delayRange, 0, 60, "PP_QuestGenDelayRange");
+                ProgressionPacingModSettings.SetChainDelayRange(key, delayRange);
+            }
+            TooltipHandler.TipRegion(delayRow, "PP_QuestGenDelayRangeTip".Translate());
+        }
+
+        private static void DrawEraPicker(Rect rect, string label, ref TechLevel era)
+        {
+            float labelWidth = Text.CalcSize(label).x + 6f;
+            float buttonWidth = 26f;
+            Rect labelRect = new Rect(rect.x, rect.y, labelWidth, rect.height);
+            Rect leftBtn = new Rect(labelRect.xMax, rect.y, buttonWidth, rect.height);
+            Rect valueRect = new Rect(leftBtn.xMax, rect.y, Mathf.Max(10f, rect.width - labelWidth - buttonWidth * 2f), rect.height);
+            Rect rightBtn = new Rect(valueRect.xMax, rect.y, buttonWidth, rect.height);
+
+            Text.Anchor = TextAnchor.MiddleLeft;
+            Widgets.Label(labelRect, label);
+
+            int index = Array.IndexOf(SelectableEras, era);
+            if (index < 0) index = 0;
+
+            if (DrawColoredButton(leftBtn, "<", EraButtonColor, Color.white) && index > 0)
+            {
+                index--;
+            }
+            if (DrawColoredButton(rightBtn, ">", EraButtonColor, Color.white) && index < SelectableEras.Length - 1)
+            {
+                index++;
+            }
+
+            Text.Anchor = TextAnchor.MiddleCenter;
+            Widgets.Label(valueRect, SelectableEras[index].ToStringHuman().CapitalizeFirst());
+            Text.Anchor = TextAnchor.UpperLeft;
+
+            era = SelectableEras[index];
         }
 
         private static bool DrawColoredButton(Rect rect, string label, Color background, Color textColor)
@@ -332,8 +466,6 @@ namespace ProgressionPacing
             return ColoredButtonClicked(rect);
         }
 
-        // MouseDown only. ButtonInvisible/GUI.Button can desync control IDs between Layout and
-        // Repaint and make Unity retry OnGUI until FPS collapses.
         private static bool ColoredButtonClicked(Rect rect)
         {
             if (Event.current.type != EventType.MouseDown || Event.current.button != 0)
@@ -411,8 +543,28 @@ namespace ProgressionPacing
         public Dictionary<TechLevel, int> savedRoundingMultiples = new Dictionary<TechLevel, int>();
         public Dictionary<TechLevel, int> savedAddons = new Dictionary<TechLevel, int>();
 
+        private TechLevel lastKnownEra = TechLevel.Undefined;
+        private const int EraCheckIntervalTicks = 2500;
+
+        private HashSet<string> chainDelayAppliedKeys = new HashSet<string>();
+
+        public bool HasAppliedChainDelay(string key) => chainDelayAppliedKeys.Contains(key);
+        public void MarkChainDelayApplied(string key) => chainDelayAppliedKeys.Add(key);
+
         public ProgressionPacingGameComponent(Game game)
         {
+        }
+
+        public override void GameComponentTick()
+        {
+            if (Find.TickManager.TicksGame % EraCheckIntervalTicks != 0) return;
+
+            TechLevel currentEra = ProgressionPacingModSettings.GetCurrentPlayerEra();
+            if (currentEra != lastKnownEra)
+            {
+                lastKnownEra = currentEra;
+                QuestChainCompat.RescanBlockedChains();
+            }
         }
 
         public override void ExposeData()
@@ -420,16 +572,19 @@ namespace ProgressionPacing
             Scribe_Collections.Look(ref savedMultipliers, "savedMultipliers", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref savedRoundingMultiples, "savedRoundingMultiples", LookMode.Value, LookMode.Value);
             Scribe_Collections.Look(ref savedAddons, "savedAddons", LookMode.Value, LookMode.Value);
+            Scribe_Collections.Look(ref chainDelayAppliedKeys, "chainDelayAppliedKeys", LookMode.Value);
 
             if (Scribe.mode == LoadSaveMode.PostLoadInit)
             {
                 if (savedMultipliers == null) savedMultipliers = new Dictionary<TechLevel, float>();
                 if (savedRoundingMultiples == null) savedRoundingMultiples = new Dictionary<TechLevel, int>();
                 if (savedAddons == null) savedAddons = new Dictionary<TechLevel, int>();
+                if (chainDelayAppliedKeys == null) chainDelayAppliedKeys = new HashSet<string>();
 
                 FixResearchProgress();
                 UpdateSavedMultipliers();
                 ProgressionPacingModSettings.UpdateQuestPacing();
+                lastKnownEra = ProgressionPacingModSettings.GetCurrentPlayerEra();
             }
         }
 
@@ -438,6 +593,7 @@ namespace ProgressionPacing
             base.StartedNewGame();
             UpdateSavedMultipliers();
             ProgressionPacingModSettings.UpdateQuestPacing();
+            lastKnownEra = ProgressionPacingModSettings.GetCurrentPlayerEra();
         }
 
         public void UpdateSavedMultipliers()
