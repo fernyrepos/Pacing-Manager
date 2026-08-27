@@ -41,7 +41,7 @@
   <PP_QuestCycleDaysTip>How many days each quest cycle lasts. Longer cycles mean random quests arrive less often.</PP_QuestCycleDaysTip>
   <PP_QuestMinDaysBetweenTip>Minimum days the storyteller waits between random quests in the same cycle.</PP_QuestMinDaysBetweenTip>
   <PP_QuestCountTip>How many random quests the storyteller tries to offer in each cycle.</PP_QuestCountTip>
-  <PP_QuestGeneratorsSection>Quest Generators</PP_QuestGeneratorsSection>
+  <PP_QuestGeneratorsSection>Quest generators</PP_QuestGeneratorsSection>
   <PP_QuestGeneratorsSectionTip>Restrict the tech era in which specific mods' special quest generators can offer their quests.</PP_QuestGeneratorsSectionTip>
   <PP_QuestGenMinEra>Min era:</PP_QuestGenMinEra>
   <PP_QuestGenMaxEra>Max era:</PP_QuestGenMaxEra>

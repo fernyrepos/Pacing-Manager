@@ -173,6 +173,7 @@ namespace ProgressionPacing
         }
 
         public static IntRange GetChainDelayRange(string key)
+        {
             if (questChainDelayRanges != null && questChainDelayRanges.TryGetValue(key, out IntRange range))
             {
                 return range;
