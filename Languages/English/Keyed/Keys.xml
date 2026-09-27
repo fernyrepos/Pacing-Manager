@@ -49,6 +49,13 @@
   <PP_QuestGen_AlphaGenesBiotechLab>Alpha Genes: Abandoned biotech labs</PP_QuestGen_AlphaGenesBiotechLab>
   <PP_QuestGen_VGEGeneticsLab>Vanilla Genetics Expanded: Abandoned genetics labs</PP_QuestGen_VGEGeneticsLab>
   <PP_QuestGen_AlphaBooksLibrary>Alpha Books: Ruined libraries</PP_QuestGen_AlphaBooksLibrary>
+  <PP_QuestGen_LeviathanSandworm>Leviathans: Sandworm</PP_QuestGen_LeviathanSandworm>
+  <PP_QuestGen_LeviathanHiveLord>Leviathans: Hive Lord</PP_QuestGen_LeviathanHiveLord>
   <PP_QuestGenDelayRange>Extra delay: {0} days</PP_QuestGenDelayRange>
   <PP_QuestGenDelayRangeTip>Once this chain's first quest is otherwise ready to fire, wait a random number of days in this range on top of that before it actually arrives. Set both to 0 to disable this extra delay.</PP_QuestGenDelayRangeTip>
+  <PP_RuinsSection>Ruins</PP_RuinsSection>
+  <PP_RuinsSectionTip>Change how Real Ruins fills ruins scattered across ordinary maps.</PP_RuinsSectionTip>
+  <PP_RuinsResetTip>Restore the ruin wealth cap to off.</PP_RuinsResetTip>
+  <PP_RuinsWealthCap>Max total wealth per ruin: {0}</PP_RuinsWealthCap>
+  <PP_RuinsWealthCapTip>Each ruin scattered on an ordinary map (your colony, camps, and so on) gets a random total wealth cap between these two values. Items are stripped from the ruin until it fits under its cap. Ruin sites you travel to are not affected. Set both to 0 to disable.</PP_RuinsWealthCapTip>
 </LanguageData>

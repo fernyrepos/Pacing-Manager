@@ -21,6 +21,7 @@ namespace ProgressionPacing
             var harmony = new Harmony("ProgressionPacingMod");
             harmony.PatchAll();
             QuestChainCompat.ApplyPatch(harmony);
+            RealRuinsCompat.ApplyPatch(harmony);
         }
 
         private float scrollHeight = 0f;
@@ -28,6 +29,7 @@ namespace ProgressionPacing
         private bool researchSectionExpanded;
         private bool powerSectionExpanded;
         private bool questSectionExpanded;
+        private bool ruinsSectionExpanded;
         private int lastSettingsFrame = -100;
         private readonly Dictionary<TechLevel, string> addonBuffers = new Dictionary<TechLevel, string>();
         private readonly Dictionary<TechLevel, string> roundingBuffers = new Dictionary<TechLevel, string>();
@@ -44,6 +46,9 @@ namespace ProgressionPacing
 
         private const float NumericFieldHeight = 30f;
         private const float DelayRangeHeight = 36f;
+        private const int RuinsWealthCapMax = 100000;
+        private const int RuinsWealthCapStep = 250;
+        private const int RuinsWealthCapWidgetId = 7431001;
         private const float NumericFieldPadding = 16f;
         private const float ControlGap = 12f;
         private const float MinSliderWidth = 80f;
@@ -60,6 +65,7 @@ namespace ProgressionPacing
                 researchSectionExpanded = false;
                 powerSectionExpanded = false;
                 questSectionExpanded = false;
+                ruinsSectionExpanded = false;
                 scrollPosition = Vector2.zero;
             }
             lastSettingsFrame = Time.frameCount;
@@ -106,6 +112,16 @@ namespace ProgressionPacing
             if (questSectionExpanded)
             {
                 DrawQuestSection(listing);
+            }
+
+            if (RealRuinsCompat.Active)
+            {
+                listing.Gap();
+                ruinsSectionExpanded = DrawSectionHeader(listing, "PP_RuinsSection".Translate(), "PP_RuinsSectionTip".Translate(), "PP_RuinsResetTip".Translate(), ruinsSectionExpanded, ProgressionPacingModSettings.ResetRuinsSettings);
+                if (ruinsSectionExpanded)
+                {
+                    DrawRuinsSection(listing);
+                }
             }
 
             scrollHeight = listing.CurHeight + 24f;
@@ -259,6 +275,27 @@ namespace ProgressionPacing
             DrawLabeledNumeric(listing, "PP_PowerOutputRoundingMultiple".Translate(), NumericFieldWidth(), ref powerOutputRoundingValue, ref powerOutputRoundingBuffer, 1, 10000, "PP_PowerOutputRoundingTip".Translate());
             ProgressionPacingModSettings.powerOutputRoundingMultiple = powerOutputRoundingValue;
             listing.Outdent();
+        }
+
+        private static void DrawRuinsSection(Listing_Standard listing)
+        {
+            listing.Indent();
+            IntRange range = ProgressionPacingModSettings.ruinsWealthCapRange;
+            Rect row = listing.GetRect(DelayRangeHeight);
+            if (IsRectVisible(listing, row))
+            {
+                Widgets.IntRange(row, RuinsWealthCapWidgetId, ref range, 0, RuinsWealthCapMax, "PP_RuinsWealthCap");
+                range.min = SnapRuinsWealth(range.min);
+                range.max = SnapRuinsWealth(range.max);
+                ProgressionPacingModSettings.ruinsWealthCapRange = range;
+            }
+            TooltipHandler.TipRegion(row, "PP_RuinsWealthCapTip".Translate());
+            listing.Outdent();
+        }
+
+        private static int SnapRuinsWealth(int value)
+        {
+            return Mathf.Clamp(Mathf.RoundToInt(value / (float)RuinsWealthCapStep) * RuinsWealthCapStep, 0, RuinsWealthCapMax);
         }
 
         private void DrawQuestSection(Listing_Standard listing)

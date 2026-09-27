@@ -73,11 +73,15 @@ namespace ProgressionPacing
             new QuestGeneratorDef { key = "AG_OpportunitySite_AbandonedBiotechLab", modPackageId = "sarg.alphagenes", labelKey = "PP_QuestGen_AlphaGenesBiotechLab" },
             new QuestGeneratorDef { key = "GR_OpportunitySite_AbandonedLab", modPackageId = "VanillaExpanded.VGeneticsE", labelKey = "PP_QuestGen_VGEGeneticsLab" },
             new QuestGeneratorDef { key = "Abooks_OpportunitySite_RuinedLibrary", modPackageId = "sarg.alphabooks", labelKey = "PP_QuestGen_AlphaBooksLibrary" },
+            new QuestGeneratorDef { key = "SandWorm_LeviathanQuest", modPackageId = "chezhou.creature.sandworm", labelKey = "PP_QuestGen_LeviathanSandworm" },
+            new QuestGeneratorDef { key = "HiveLord_SyndicateHunt", modPackageId = "chezhou.creature.hivelord", labelKey = "PP_QuestGen_LeviathanHiveLord" },
         };
 
         public static Dictionary<string, QuestGeneratorEraRange> questGeneratorEraRanges = new Dictionary<string, QuestGeneratorEraRange>();
 
         public static Dictionary<string, IntRange> questChainDelayRanges = new Dictionary<string, IntRange>();
+
+        public static IntRange ruinsWealthCapRange = new IntRange(0, 0);
 
         public static Dictionary<ResearchProjectDef, float> originalResearchCosts = null;
 
@@ -102,6 +106,7 @@ namespace ProgressionPacing
             Scribe_Collections.Look(ref questPacingByComp, "questPacingByComp", LookMode.Value, LookMode.Deep);
             Scribe_Collections.Look(ref questGeneratorEraRanges, "questGeneratorEraRanges", LookMode.Value, LookMode.Deep);
             Scribe_Collections.Look(ref questChainDelayRanges, "questChainDelayRanges", LookMode.Value, LookMode.Value);
+            Scribe_Values.Look(ref ruinsWealthCapRange, "ruinsWealthCapRange", new IntRange(0, 0));
             EnsureDictionaries();
         }
 
@@ -179,6 +184,11 @@ namespace ProgressionPacing
                 return range;
             }
             return new IntRange(0, 0);
+        }
+
+        public static void ResetRuinsSettings()
+        {
+            ruinsWealthCapRange = new IntRange(0, 0);
         }
 
         public static void ResetQuestChainDelayRanges()
