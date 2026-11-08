@@ -64,6 +64,7 @@ namespace ProgressionPacing
         public static float powerOutputMultiplier = 1f;
         public static int powerOutputRoundingMultiple = 1;
         public static bool excludeGravdata;
+        public static bool disableTechLevelCostFactor;
 
         public static Dictionary<string, QuestPacingValues> questPacingByComp = new Dictionary<string, QuestPacingValues>();
 
@@ -75,6 +76,7 @@ namespace ProgressionPacing
             new QuestGeneratorDef { key = "Abooks_OpportunitySite_RuinedLibrary", modPackageId = "sarg.alphabooks", labelKey = "PP_QuestGen_AlphaBooksLibrary" },
             new QuestGeneratorDef { key = "SandWorm_LeviathanQuest", modPackageId = "chezhou.creature.sandworm", labelKey = "PP_QuestGen_LeviathanSandworm" },
             new QuestGeneratorDef { key = "HiveLord_SyndicateHunt", modPackageId = "chezhou.creature.hivelord", labelKey = "PP_QuestGen_LeviathanHiveLord" },
+            new QuestGeneratorDef { key = "VFEM2_OpportunitySite_SiegeCamp", modPackageId = "OskarPotocki.VFE.Medieval2", labelKey = "PP_QuestGen_VFEM2SiegeCamp" },
         };
 
         public static Dictionary<string, QuestGeneratorEraRange> questGeneratorEraRanges = new Dictionary<string, QuestGeneratorEraRange>();
@@ -103,6 +105,7 @@ namespace ProgressionPacing
             Scribe_Values.Look(ref powerOutputMultiplier, "powerOutputMultiplier", 1f);
             Scribe_Values.Look(ref powerOutputRoundingMultiple, "powerOutputRoundingMultiple", 1);
             Scribe_Values.Look(ref excludeGravdata, "excludeGravdata");
+            Scribe_Values.Look(ref disableTechLevelCostFactor, "disableTechLevelCostFactor");
             Scribe_Collections.Look(ref questPacingByComp, "questPacingByComp", LookMode.Value, LookMode.Deep);
             Scribe_Collections.Look(ref questGeneratorEraRanges, "questGeneratorEraRanges", LookMode.Value, LookMode.Deep);
             Scribe_Collections.Look(ref questChainDelayRanges, "questChainDelayRanges", LookMode.Value, LookMode.Value);
@@ -213,6 +216,7 @@ namespace ProgressionPacing
             techLevelRoundingMultiples = CreateDefaultRoundingMultiples();
             techLevelAddons = CreateDefaultAddons();
             excludeGravdata = false;
+            disableTechLevelCostFactor = false;
         }
 
         public static void ResetPowerSettings()
